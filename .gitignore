@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+
+# 环境变量（真 .env 不入库）
+.env
+
+# 测试产物
+allure-results/
+allure-report/
+report/
+*.log
+
+# 若依源码不入库（构建时容器内 clone）
+vendor/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
