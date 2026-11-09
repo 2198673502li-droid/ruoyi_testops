@@ -1,0 +1,30 @@
+# syntax=docker/dockerfile:1
+
+# ===== 阶段 1：拉源码（不把第三方源码复制进仓库）=====
+FROM alpine:3.21 AS src
+ARG RUOYI_REF=master
+RUN apk add --no-cache git \
+ && git clone https://gitee.com/y_project/RuoYi-Vue.git /src \
+ && cd /src && git checkout ${RUOYI_REF}
+
+# ===== 阶段 2：编译 =====
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /build
+COPY --from=src /src /build
+COPY docker/maven-settings.xml /root/.m2/settings.xml
+RUN mvn -B -DskipTests package
+
+# ===== 阶段 3：运行 =====
+FROM eclipse-temurin:17-jre-jammy
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl tzdata \
+ && rm -rf /var/lib/apt/lists/* \
+ && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+ENV TZ=Asia/Shanghai \
+    JAVA_OPTS="-Xms256m -Xmx512m -Duser.timezone=Asia/Shanghai"
+WORKDIR /app
+COPY --from=build /build/ruoyi-admin/target /app/target
+RUN cp "$(find /app/target -maxdepth 1 -name '*.jar' | head -n1)" /app/app.jar \
+ && rm -rf /app/target
+EXPOSE 8080
+ENTRYPOINT ["sh","-c","exec java $JAVA_OPTS -jar /app/app.jar"]

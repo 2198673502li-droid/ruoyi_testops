@@ -1,0 +1,7 @@
+.git
+vendor
+tests
+docs
+jenkins
+deploy/mysql/init
+*.md
